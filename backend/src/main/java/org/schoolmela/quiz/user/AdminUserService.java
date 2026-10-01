@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,11 +21,14 @@ public class AdminUserService {
     private final UserRepository users;
     private final AuthService authService;
     private final TokenService tokenService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdminUserService(UserRepository users, AuthService authService, TokenService tokenService) {
+    public AdminUserService(UserRepository users, AuthService authService, TokenService tokenService,
+            PasswordEncoder passwordEncoder) {
         this.users = users;
         this.authService = authService;
         this.tokenService = tokenService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -53,8 +57,7 @@ public class AdminUserService {
         if (adminId.equals(userId)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "CANNOT_CHANGE_SELF", "You cannot turn off your own account.");
         }
-        User user = users.findById(userId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found."));
+        User user = findUser(userId);
         user.setActive(active);
         if (active) {
             user.clearFailedLogins();
@@ -62,6 +65,27 @@ public class AdminUserService {
             tokenService.revokeAll(user);
         }
         return UserSummary.from(user);
+    }
+
+    /**
+     * Sets a new PIN for a user who forgot theirs. Also clears any lockout and logs the user out
+     * everywhere, so only someone with the new PIN can get in.
+     */
+    @Transactional
+    public UserSummary resetPin(Long adminId, Long userId, String pin) {
+        if (adminId.equals(userId)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "CANNOT_CHANGE_SELF",
+                    "You cannot reset your own PIN here. Ask another admin.");
+        }
+        User user = findUser(userId);
+        user.changePin(passwordEncoder.encode(pin));
+        tokenService.revokeAll(user);
+        return UserSummary.from(user);
+    }
+
+    private User findUser(Long userId) {
+        return users.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found."));
     }
 
     @Transactional

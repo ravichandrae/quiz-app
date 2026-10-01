@@ -47,6 +47,12 @@ public class AdminUserController {
         return service.setActive(Long.valueOf(jwt.getSubject()), id, request.active());
     }
 
+    @PostMapping("/users/{id}/reset-pin")
+    public UserSummary resetPin(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
+            @Valid @RequestBody ResetPinRequest request) {
+        return service.resetPin(Long.valueOf(jwt.getSubject()), id, request.pin());
+    }
+
     @PostMapping("/admins")
     @ResponseStatus(HttpStatus.CREATED)
     public UserSummary createAdmin(@Valid @RequestBody CreateAdminRequest request) {
@@ -54,6 +60,12 @@ public class AdminUserController {
     }
 
     public record UpdateUserRequest(@NotNull Boolean active) {
+    }
+
+    public record ResetPinRequest(
+            @NotNull(message = Credentials.PIN_MESSAGE)
+            @Pattern(regexp = Credentials.PIN_PATTERN, message = Credentials.PIN_MESSAGE)
+            String pin) {
     }
 
     public record CreateAdminRequest(

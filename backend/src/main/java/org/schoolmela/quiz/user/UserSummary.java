@@ -10,7 +10,9 @@ public record UserSummary(
         String school,
         Role role,
         boolean active,
-        Instant createdAt) {
+        Instant createdAt,
+        /** When a lockout for wrong PINs ends; in the past (or null) if the account is not locked. */
+        Instant lockedUntil) {
 
     public static UserSummary from(User user) {
         return new UserSummary(
@@ -21,6 +23,7 @@ public record UserSummary(
                 user.getSchool(),
                 user.getRole(),
                 user.isActive(),
-                user.getCreatedAt());
+                user.getCreatedAt(),
+                user.getLockedUntil());
     }
 }

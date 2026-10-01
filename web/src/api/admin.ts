@@ -9,6 +9,8 @@ export interface UserSummary {
   role: Role
   active: boolean
   createdAt: string
+  /** When a wrong-PIN lockout ends; in the past or null if not locked. */
+  lockedUntil: string | null
 }
 
 export interface Page<T> {
@@ -35,6 +37,10 @@ export function listStudents({ q, active, page = 0, size = 20 }: StudentFilter):
 
 export function setUserActive(id: number, active: boolean): Promise<UserSummary> {
   return apiFetch(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ active }) })
+}
+
+export function resetPin(id: number, pin: string): Promise<UserSummary> {
+  return apiFetch(`/admin/users/${id}/reset-pin`, { method: 'POST', body: JSON.stringify({ pin }) })
 }
 
 export function createAdmin(input: { name: string; mobile: string; pin: string }): Promise<UserSummary> {

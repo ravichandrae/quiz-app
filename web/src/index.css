@@ -303,3 +303,23 @@ tbody tr:last-child td {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+main > section.panel {
+  margin: 0 0 1rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

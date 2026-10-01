@@ -43,8 +43,10 @@ Ports and credentials can be overridden by copying `.env.example` to `.env`.
 | `BOOTSTRAP_ADMIN_PIN`       | `123456`            | First admin's PIN                                        |
 | `BOOTSTRAP_ADMIN_NAME`      | `Admin`             | First admin's name                                       |
 
-Login rules: 5 wrong PINs lock an account for 15 minutes (an admin can unlock it by turning the
-account back on). Login tokens last 15 minutes and are renewed automatically for up to 7 days; the
+Login rules: 5 wrong PINs lock an account for 15 minutes; locked students show as "Locked" on the
+Students page. If a student forgets their PIN, an admin uses **Reset PIN** to set a new one with them,
+which also removes the lock and logs the student out on other devices. Login tokens last 15 minutes and
+are renewed automatically for up to 7 days; the
 web app forgets the login when the browser tab is closed, since students often share a tablet.
 
 ## Develop locally

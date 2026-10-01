@@ -81,6 +81,12 @@ public class User {
         lockedUntil = null;
     }
 
+    /** Sets a new PIN (already hashed) and clears any lockout. */
+    public void changePin(String pinHash) {
+        this.pinHash = pinHash;
+        clearFailedLogins();
+    }
+
     public void setActive(boolean active) {
         this.active = active;
     }

@@ -1,5 +1,6 @@
 package org.schoolmela.quiz.user;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -123,6 +124,66 @@ class AdminUsersIntegrationTest extends IntegrationTest {
         String newAdmin = accessTokenFor(mobile, "246810");
         mvc.perform(get("/admin/users").header("Authorization", bearer(newAdmin)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void resetPinReplacesThePinUnlocksAndEndsOldSessions() throws Exception {
+        String mobile = uniqueMobile();
+        String registered = register("Asha", mobile, "4321").andReturn().getResponse().getContentAsString();
+        long id = ((Number) JsonPath.read(registered, "$.user.id")).longValue();
+        String oldRefresh = JsonPath.read(registered, "$.refreshToken");
+        for (int i = 0; i < 5; i++) {
+            login(mobile, "0000");
+        }
+        String admin = accessTokenFor(ADMIN_MOBILE, ADMIN_PIN);
+        mvc.perform(get("/admin/users").param("q", mobile).header("Authorization", bearer(admin)))
+                .andExpect(jsonPath("$.content[0].lockedUntil").isNotEmpty());
+
+        resetPin(admin, id, "8642")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mobile").value(mobile))
+                .andExpect(jsonPath("$.lockedUntil").value(nullValue()));
+
+        login(mobile, "4321").andExpect(status().isUnauthorized());
+        login(mobile, "8642").andExpect(status().isOk());
+        postJson("/auth/refresh", "{\"refreshToken\": \"" + oldRefresh + "\"}")
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void resetPinValidatesTheNewPin() throws Exception {
+        String registered = register("Asha", uniqueMobile(), "4321").andReturn().getResponse().getContentAsString();
+        long id = ((Number) JsonPath.read(registered, "$.user.id")).longValue();
+
+        resetPin(accessTokenFor(ADMIN_MOBILE, ADMIN_PIN), id, "12")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.pin").value("PIN must be 4 to 6 digits"));
+    }
+
+    @Test
+    void resetPinIsOnlyForAdminsAndNotForYourself() throws Exception {
+        String mobile = uniqueMobile();
+        String registered = register("Asha", mobile, "4321").andReturn().getResponse().getContentAsString();
+        long studentId = ((Number) JsonPath.read(registered, "$.user.id")).longValue();
+        resetPin(JsonPath.read(registered, "$.accessToken"), studentId, "1111")
+                .andExpect(status().isForbidden());
+
+        String adminLogin = login(ADMIN_MOBILE, ADMIN_PIN).andReturn().getResponse().getContentAsString();
+        long adminId = ((Number) JsonPath.read(adminLogin, "$.user.id")).longValue();
+        String admin = JsonPath.read(adminLogin, "$.accessToken");
+        resetPin(admin, adminId, "1111")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CANNOT_CHANGE_SELF"));
+        resetPin(admin, 999_999L, "1111")
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
+    }
+
+    private ResultActions resetPin(String adminToken, long userId, String pin) throws Exception {
+        return mvc.perform(post("/admin/users/{id}/reset-pin", userId)
+                .header("Authorization", bearer(adminToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"pin\": \"" + pin + "\"}"));
     }
 
     private ResultActions setActive(String adminToken, long userId, boolean active) throws Exception {

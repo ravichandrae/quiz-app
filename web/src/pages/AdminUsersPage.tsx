@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { createAdmin, listStudents, setUserActive, type Page, type UserSummary } from '../api/admin'
+import { createAdmin, listStudents, resetPin, setUserActive, type Page, type UserSummary } from '../api/admin'
 import { ApiError } from '../api/client'
 import { digitsOnly } from '../components/digitsOnly'
 import { Field } from '../components/Field'
@@ -7,6 +7,16 @@ import { Field } from '../components/Field'
 type StatusFilter = 'all' | 'active' | 'inactive'
 
 const dateFormat = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+
+function isLocked(user: UserSummary): boolean {
+  return user.lockedUntil !== null && new Date(user.lockedUntil).getTime() > Date.now()
+}
+
+function statusOf(user: UserSummary): { label: string; className: string } {
+  if (!user.active) return { label: 'Turned off', className: 'badge--off' }
+  if (isLocked(user)) return { label: 'Locked', className: 'badge--off' }
+  return { label: 'Active', className: 'badge--ok' }
+}
 
 export function AdminUsersPage() {
   const [query, setQuery] = useState('')
@@ -16,6 +26,7 @@ export function AdminUsersPage() {
   const [result, setResult] = useState<Page<UserSummary> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
+  const [resetting, setResetting] = useState<UserSummary | null>(null)
 
   useEffect(() => {
     // Ignore responses for an outdated search, which could otherwise arrive last and win.
@@ -45,12 +56,16 @@ export function AdminUsersPage() {
     setSubmittedQuery(query.trim())
   }
 
+  function replaceUser(updated: UserSummary) {
+    setResult((r) => r && { ...r, content: r.content.map((u) => (u.id === updated.id ? updated : u)) })
+  }
+
   async function toggleActive(user: UserSummary) {
     setBusyId(user.id)
     setError(null)
     try {
       const updated = await setUserActive(user.id, !user.active)
-      setResult((r) => r && { ...r, content: r.content.map((u) => (u.id === updated.id ? updated : u)) })
+      replaceUser(updated)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not update the student.')
     } finally {
@@ -92,6 +107,15 @@ export function AdminUsersPage() {
         </p>
       )}
 
+      {resetting && (
+        <ResetPinPanel
+          key={resetting.id}
+          user={resetting}
+          onDone={(updated) => replaceUser(updated)}
+          onClose={() => setResetting(null)}
+        />
+      )}
+
       {result && result.content.length === 0 && <p className="empty">No students found.</p>}
 
       {result && result.content.length > 0 && (
@@ -118,20 +142,28 @@ export function AdminUsersPage() {
                     <td>{user.school ?? '—'}</td>
                     <td>{dateFormat.format(new Date(user.createdAt))}</td>
                     <td>
-                      <span className={`badge ${user.active ? 'badge--ok' : 'badge--off'}`}>
-                        {user.active ? 'Active' : 'Turned off'}
-                      </span>
+                      <span className={`badge ${statusOf(user).className}`}>{statusOf(user).label}</span>
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className="button button--secondary button--small"
-                        disabled={busyId === user.id}
-                        onClick={() => toggleActive(user)}
-                        aria-label={`${user.active ? 'Turn off' : 'Turn on'} ${user.name}`}
-                      >
-                        {user.active ? 'Turn off' : 'Turn on'}
-                      </button>
+                      <div className="actions">
+                        <button
+                          type="button"
+                          className="button button--secondary button--small"
+                          onClick={() => setResetting(user)}
+                          aria-label={`Reset PIN for ${user.name}`}
+                        >
+                          Reset PIN
+                        </button>
+                        <button
+                          type="button"
+                          className="button button--secondary button--small"
+                          disabled={busyId === user.id}
+                          onClick={() => toggleActive(user)}
+                          aria-label={`${user.active ? 'Turn off' : 'Turn on'} ${user.name}`}
+                        >
+                          {user.active ? 'Turn off' : 'Turn on'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -164,6 +196,104 @@ export function AdminUsersPage() {
 
       <AddAdminForm />
     </main>
+  )
+}
+
+function ResetPinPanel({
+  user,
+  onDone,
+  onClose,
+}: {
+  user: UserSummary
+  onDone: (updated: UserSummary) => void
+  onClose: () => void
+}) {
+  const [pin, setPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    if (pin !== confirmPin) {
+      setFieldErrors({ confirmPin: 'The two PINs are not the same' })
+      return
+    }
+    setFieldErrors({})
+    setBusy(true)
+    try {
+      onDone(await resetPin(user.id, pin))
+      setDone(true)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setFieldErrors(err.fieldErrors)
+        if (!Object.keys(err.fieldErrors).length) setError(err.message)
+      } else {
+        setError('Could not reset the PIN.')
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="panel" aria-labelledby="reset-pin-title">
+      <h2 id="reset-pin-title">Reset PIN for {user.name}</h2>
+      {done ? (
+        <>
+          <p role="status" className="notice">
+            {user.name}&apos;s PIN has been changed. Tell them their new PIN.
+          </p>
+          <button type="button" className="button" onClick={onClose}>
+            Done
+          </button>
+        </>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate>
+          <p className="field__hint">
+            Choose the new PIN together with the student. Their old PIN will stop working and any lock is removed.
+          </p>
+          <Field
+            label="New PIN"
+            hint="4 to 6 numbers"
+            type="password"
+            inputMode="numeric"
+            autoComplete="new-password"
+            maxLength={6}
+            autoFocus
+            value={pin}
+            onChange={(e) => setPin(digitsOnly(e.target.value))}
+            error={fieldErrors.pin}
+          />
+          <Field
+            label="Type the new PIN again"
+            type="password"
+            inputMode="numeric"
+            autoComplete="new-password"
+            maxLength={6}
+            value={confirmPin}
+            onChange={(e) => setConfirmPin(digitsOnly(e.target.value))}
+            error={fieldErrors.confirmPin}
+          />
+          {error && (
+            <p role="alert" className="alert">
+              {error}
+            </p>
+          )}
+          <div className="button-row">
+            <button type="submit" className="button" disabled={busy}>
+              Save new PIN
+            </button>
+            <button type="button" className="button button--secondary" onClick={onClose}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
   )
 }
 
