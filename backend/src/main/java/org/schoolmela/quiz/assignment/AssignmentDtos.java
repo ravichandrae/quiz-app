@@ -42,20 +42,14 @@ public final class AssignmentDtos {
         }
     }
 
-    public enum MyQuizStatus {
-        /** Assigned but not started yet. */
-        NEW
-    }
-
-    /** A quiz as a student sees it on their dashboard: no questions or answers. */
-    public record MyQuiz(
+    /** A quiz given to a student, however it reached them. */
+    public record AssignedQuiz(
             Long quizId,
             String title,
             int questionCount,
             int questionTimeSeconds,
             Integer totalTimeLimitSeconds,
             Instant assignedAt,
-            Instant dueAt,
-            MyQuizStatus status) {
+            Instant dueAt) {
     }
 }

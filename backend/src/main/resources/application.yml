@@ -38,6 +38,9 @@ app:
     refresh-token-ttl: 7d
     max-failed-logins: 5
     lockout-duration: 15m
+  quiz:
+    # Extra time after a question's deadline in which an answer still counts (slow networks).
+    answer-grace: 3s
   bootstrap-admin:
     name: ${BOOTSTRAP_ADMIN_NAME:Admin}
     mobile: ${BOOTSTRAP_ADMIN_MOBILE:}

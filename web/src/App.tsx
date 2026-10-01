@@ -14,6 +14,7 @@ import { QuizFormPage } from './pages/QuizFormPage'
 import { QuizzesPage } from './pages/QuizzesPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { StudentHomePage } from './pages/StudentHomePage'
+import { TakeQuizPage } from './pages/TakeQuizPage'
 
 const ADMIN_ROUTES: [string, ComponentType][] = [
   ['/admin/users', AdminUsersPage],
@@ -43,6 +44,14 @@ function App() {
           element={
             <RequireRole role="STUDENT">
               <StudentHomePage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/student/quizzes/:quizId"
+          element={
+            <RequireRole role="STUDENT">
+              <TakeQuizPage />
             </RequireRole>
           }
         />

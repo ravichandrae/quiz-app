@@ -21,17 +21,6 @@ export interface AssignInput {
   dueAt?: string
 }
 
-/** A quiz on a student's dashboard. */
-export interface MyQuiz {
-  quizId: number
-  title: string
-  questionCount: number
-  questionTimeSeconds: number
-  totalTimeLimitSeconds: number | null
-  assignedAt: string
-  dueAt: string | null
-  status: 'NEW'
-}
 
 /** "All students", "Group: Class 7A" or "Asha (9876543210)". */
 export function describeTarget(a: Assignment): string {
@@ -50,8 +39,4 @@ export function assignQuiz(quizId: number, input: AssignInput): Promise<Assignme
 
 export function unassignQuiz(quizId: number, assignmentId: number): Promise<void> {
   return apiFetch(`/admin/quizzes/${quizId}/assignments/${assignmentId}`, { method: 'DELETE' })
-}
-
-export function listMyQuizzes(): Promise<MyQuiz[]> {
-  return apiFetch('/me/quizzes')
 }

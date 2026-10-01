@@ -8,9 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.schoolmela.quiz.assignment.AssignmentDtos.AssignRequest;
+import org.schoolmela.quiz.assignment.AssignmentDtos.AssignedQuiz;
 import org.schoolmela.quiz.assignment.AssignmentDtos.AssignmentDto;
-import org.schoolmela.quiz.assignment.AssignmentDtos.MyQuiz;
-import org.schoolmela.quiz.assignment.AssignmentDtos.MyQuizStatus;
 import org.schoolmela.quiz.common.ApiException;
 import org.schoolmela.quiz.group.StudentGroup;
 import org.schoolmela.quiz.group.StudentGroupRepository;
@@ -85,20 +84,19 @@ public class AssignmentService {
      * through a group, say) appears once, with the earliest assignment date and the latest due date.
      */
     @Transactional(readOnly = true)
-    public List<MyQuiz> quizzesFor(Long studentId) {
-        Map<Long, MyQuiz> byQuiz = new LinkedHashMap<>();
+    public List<AssignedQuiz> quizzesFor(Long studentId) {
+        Map<Long, AssignedQuiz> byQuiz = new LinkedHashMap<>();
         for (Assignment a : assignments.findVisibleTo(studentId)) {
             Quiz quiz = a.getQuiz();
-            MyQuiz existing = byQuiz.get(quiz.getId());
+            AssignedQuiz existing = byQuiz.get(quiz.getId());
             Instant assignedAt = existing == null || a.getAssignedAt().isBefore(existing.assignedAt())
                     ? a.getAssignedAt() : existing.assignedAt();
             Instant dueAt = existing == null ? a.getDueAt() : laterDueDate(existing.dueAt(), a.getDueAt());
-            byQuiz.put(quiz.getId(), new MyQuiz(quiz.getId(), quiz.getTitle(), quiz.getQuestions().size(),
-                    quiz.getQuestionTimeSeconds(), quiz.getTotalTimeLimitSeconds(), assignedAt, dueAt,
-                    MyQuizStatus.NEW));
+            byQuiz.put(quiz.getId(), new AssignedQuiz(quiz.getId(), quiz.getTitle(), quiz.getQuestions().size(),
+                    quiz.getQuestionTimeSeconds(), quiz.getTotalTimeLimitSeconds(), assignedAt, dueAt));
         }
         return byQuiz.values().stream()
-                .sorted(Comparator.comparing(MyQuiz::assignedAt).reversed())
+                .sorted(Comparator.comparing(AssignedQuiz::assignedAt).reversed())
                 .toList();
     }
 

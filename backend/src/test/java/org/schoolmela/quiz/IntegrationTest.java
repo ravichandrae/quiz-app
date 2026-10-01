@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.jayway.jsonpath.JsonPath;
 import java.util.concurrent.atomic.AtomicLong;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -33,7 +34,16 @@ public abstract class IntegrationTest {
     @Autowired
     protected MockMvc mvc;
 
+    /** The app's clock; reset after each test. */
+    @Autowired
+    protected MutableClock clock;
+
     private String adminToken;
+
+    @AfterEach
+    void resetClock() {
+        clock.reset();
+    }
 
     /** A mobile number no other test has used, since tests share one database. */
     protected static String uniqueMobile() {

@@ -25,3 +25,10 @@ export function toFormError(err: unknown, fallback: string): FormError {
 export function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback
 }
+
+/** "5 min" for a quiz with an overall limit, otherwise "Up to 2 min 30 sec" (the questions' total). */
+export function quizTimeText(quiz: { totalTimeLimitSeconds: number | null; questionTimeSeconds: number }): string {
+  return quiz.totalTimeLimitSeconds === null
+    ? `Up to ${formatDuration(quiz.questionTimeSeconds)}`
+    : formatDuration(quiz.totalTimeLimitSeconds)
+}

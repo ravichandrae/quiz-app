@@ -1,16 +1,11 @@
 import { useCallback } from 'react'
-import { listMyQuizzes, type MyQuiz } from '../api/assignments'
+import { Link } from 'react-router'
+import { listMyQuizzes } from '../api/attempts'
 import { useAuth } from '../auth/authContext'
-import { formatDuration } from '../components/format'
+import { quizTimeText } from '../components/format'
 import { useLoad } from '../components/useLoad'
 
 const dateFormat = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
-
-function timeText(quiz: MyQuiz): string {
-  return quiz.totalTimeLimitSeconds === null
-    ? `Up to ${formatDuration(quiz.questionTimeSeconds)}`
-    : formatDuration(quiz.totalTimeLimitSeconds)
-}
 
 export function StudentHomePage() {
   const { user } = useAuth()
@@ -40,24 +35,39 @@ export function StudentHomePage() {
       {quizzes && quizzes.length > 0 && (
         <ul className="quiz-cards" aria-label="Your quizzes">
           {quizzes.map((quiz) => (
-            <li key={quiz.quizId} className="quiz-card">
+            <li key={quiz.quizId} className={`quiz-card${quiz.status === 'COMPLETED' ? ' quiz-card--done' : ''}`}>
               <div className="quiz-card__title">
                 <h2>{quiz.title}</h2>
                 {quiz.status === 'NEW' && <span className="badge badge--new">New</span>}
+                {quiz.status === 'COMPLETED' && <span className="badge badge--ok">Done</span>}
               </div>
               <p className="quiz-card__facts">
                 <span>
-                  <span aria-hidden="true">📝</span> {quiz.questionCount} {quiz.questionCount === 1 ? 'question' : 'questions'}
+                  <span aria-hidden="true">📝</span> {quiz.questionCount}{' '}
+                  {quiz.questionCount === 1 ? 'question' : 'questions'}
                 </span>
                 <span>
-                  <span aria-hidden="true">⏱</span> {timeText(quiz)}
+                  <span aria-hidden="true">⏱</span> {quizTimeText(quiz)}
                 </span>
-                {quiz.dueAt && (
+                {quiz.dueAt && quiz.status !== 'COMPLETED' && (
                   <span>
                     <span aria-hidden="true">📅</span> Finish by {dateFormat.format(new Date(quiz.dueAt))}
                   </span>
                 )}
               </p>
+              {quiz.status === 'COMPLETED' ? (
+                <p className="quiz-card__score">
+                  Your score: {quiz.score} out of {quiz.questionCount}
+                </p>
+              ) : (
+                <Link
+                  to={`/student/quizzes/${quiz.quizId}`}
+                  className="button quiz-card__action"
+                  aria-label={`${quiz.status === 'NEW' ? 'Start' : 'Continue'} ${quiz.title}`}
+                >
+                  {quiz.status === 'NEW' ? 'Start' : 'Continue'}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

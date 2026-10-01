@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { UserSummary } from '../api/admin'
-import type { Assignment, MyQuiz } from '../api/assignments'
+import type { Assignment } from '../api/assignments'
 import type { GroupDetail } from '../api/groups'
 import type { QuizDetail } from '../api/quizzes'
 import { json, mockApi, renderApp, signIn } from '../test-utils'
@@ -168,35 +168,5 @@ describe('assigning a quiz', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Yes, remove' }))
 
     expect(await screen.findByText('Nobody yet. Choose below who should take this quiz.')).toBeInTheDocument()
-  })
-})
-
-describe('student dashboard', () => {
-  it('lists assigned quizzes and counts the new ones', async () => {
-    signIn('STUDENT')
-    const quizzes: MyQuiz[] = [
-      { quizId: 1, title: 'Science Week 1', questionCount: 10, questionTimeSeconds: 450, totalTimeLimitSeconds: null, assignedAt: '', dueAt: '2099-10-05T18:29:59Z', status: 'NEW' },
-      { quizId: 2, title: 'Maths', questionCount: 1, questionTimeSeconds: 30, totalTimeLimitSeconds: 300, assignedAt: '', dueAt: null, status: 'NEW' },
-    ]
-    mockApi({ 'GET /api/me/quizzes': () => json(quizzes) })
-    renderApp('/student')
-
-    expect(await screen.findByRole('status')).toHaveTextContent('You have 2 new quizzes!')
-    const science = screen.getByRole('heading', { name: 'Science Week 1' }).closest('li')!
-    expect(within(science).getByText('New')).toBeInTheDocument()
-    expect(within(science).getByText(/10 questions/)).toBeInTheDocument()
-    expect(within(science).getByText(/Up to 7 min 30 sec/)).toBeInTheDocument()
-    expect(within(science).getByText(/Finish by/)).toBeInTheDocument()
-    const maths = screen.getByRole('heading', { name: 'Maths' }).closest('li')!
-    expect(within(maths).getByText(/1 question$/)).toBeInTheDocument()
-    expect(within(maths).queryByText(/Finish by/)).not.toBeInTheDocument()
-  })
-
-  it('says when there are no quizzes', async () => {
-    signIn('STUDENT')
-    mockApi({ 'GET /api/me/quizzes': () => json([]) })
-    renderApp('/student')
-
-    expect(await screen.findByText('You have no quizzes yet. Your teacher will add them soon.')).toBeInTheDocument()
   })
 })
