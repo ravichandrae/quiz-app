@@ -21,10 +21,15 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
+    static final String VALIDATION_MESSAGE = "Please check the details you entered.";
+
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ProblemDetail> handleApiException(ApiException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
         problem.setProperty("code", ex.getCode());
+        if (!ex.getFieldErrors().isEmpty()) {
+            problem.setProperty("errors", ex.getFieldErrors());
+        }
         return ResponseEntity.status(ex.getStatus()).body(problem);
     }
 
@@ -35,7 +40,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.putIfAbsent(error.getField(), error.getDefaultMessage());
         }
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Please check the details you entered.");
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, VALIDATION_MESSAGE);
         problem.setProperty("code", "VALIDATION_FAILED");
         problem.setProperty("errors", errors);
         return ResponseEntity.badRequest().body(problem);

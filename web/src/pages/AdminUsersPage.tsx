@@ -3,6 +3,7 @@ import { createAdmin, listStudents, resetPin, setUserActive, type Page, type Use
 import { ApiError } from '../api/client'
 import { digitsOnly } from '../components/digitsOnly'
 import { Field } from '../components/Field'
+import { Pager } from '../components/Pager'
 
 type StatusFilter = 'all' | 'active' | 'inactive'
 
@@ -170,27 +171,7 @@ export function AdminUsersPage() {
               </tbody>
             </table>
           </div>
-          <nav className="pager" aria-label="Pages">
-            <button
-              type="button"
-              className="button button--secondary button--small"
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Previous
-            </button>
-            <span>
-              Page {result.page + 1} of {Math.max(result.totalPages, 1)} · {result.totalElements} students
-            </span>
-            <button
-              type="button"
-              className="button button--secondary button--small"
-              disabled={result.page + 1 >= result.totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </button>
-          </nav>
+          <Pager page={result} noun="students" onChange={setPage} />
         </>
       )}
 

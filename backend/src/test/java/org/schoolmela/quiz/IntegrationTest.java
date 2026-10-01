@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /** Base for tests that run the whole app against a real Postgres (one shared context and container). */
 @SpringBootTest(properties = {
@@ -31,6 +32,8 @@ public abstract class IntegrationTest {
 
     @Autowired
     protected MockMvc mvc;
+
+    private String adminToken;
 
     /** A mobile number no other test has used, since tests share one database. */
     protected static String uniqueMobile() {
@@ -56,6 +59,24 @@ public abstract class IntegrationTest {
     protected String accessTokenFor(String mobile, String pin) throws Exception {
         String body = login(mobile, pin).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         return JsonPath.read(body, "$.accessToken");
+    }
+
+    /** Sends a request as the bootstrap admin, with an optional JSON body. */
+    protected ResultActions asAdmin(MockHttpServletRequestBuilder request, String json) throws Exception {
+        adminToken = adminToken != null ? adminToken : accessTokenFor(ADMIN_MOBILE, ADMIN_PIN);
+        request.header("Authorization", bearer(adminToken));
+        if (json != null) {
+            request.contentType(MediaType.APPLICATION_JSON).content(json);
+        }
+        return mvc.perform(request);
+    }
+
+    protected ResultActions asAdmin(MockHttpServletRequestBuilder request) throws Exception {
+        return asAdmin(request, null);
+    }
+
+    protected static long idOf(ResultActions result) throws Exception {
+        return ((Number) JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.id")).longValue();
     }
 
     protected static String bearer(String token) {

@@ -9,6 +9,7 @@
   --primary-hover: #166534;
   --error: #b91c1c;
   --error-bg: #fef2f2;
+  --danger: #b91c1c;
   --ok-bg: #f0fdf4;
   --focus: #2563eb;
 
@@ -30,6 +31,7 @@
     --primary-hover: #4ade80;
     --error: #fca5a5;
     --error-bg: #3f1d1d;
+    --danger: #dc2626;
     --ok-bg: #14301f;
     --focus: #60a5fa;
     color-scheme: dark;
@@ -322,4 +324,178 @@ main > section.panel {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* Navigation */
+.header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.header__nav a {
+  padding: 0.5rem 0.25rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.header__nav a.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.page-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.page-title h1 {
+  margin: 0;
+}
+
+a.button {
+  text-decoration: none;
+}
+
+.button--danger {
+  color: #ffffff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.button--danger:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
+  filter: brightness(0.9);
+}
+
+.confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-weight: 600;
+}
+
+td.wrap {
+  min-width: 12rem;
+  white-space: normal;
+}
+
+/* Question form */
+textarea {
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  resize: vertical;
+}
+
+textarea[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.options {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: none;
+}
+
+.options legend {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.option-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.option-row input[type='radio'] {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  min-height: 0;
+  margin: 0.6rem 0 0;
+  accent-color: var(--primary);
+}
+
+.option-row__letter {
+  flex: none;
+  width: 1.5rem;
+  padding-top: 0.6rem;
+  font-weight: 700;
+}
+
+.option-row__input {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+/* Quiz form */
+.narrow {
+  max-width: 32rem;
+}
+
+.checkbox {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.checkbox input {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-height: 0;
+  accent-color: var(--primary);
+}
+
+.chosen,
+.bank {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.bank {
+  padding-left: 0;
+  list-style: none;
+}
+
+.chosen li,
+.bank li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.chosen__text {
+  flex: 1 1 14rem;
+}
+
+.chosen__time {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+form > .panel,
+form > section.panel {
+  margin: 1.5rem 0;
 }

@@ -1,11 +1,26 @@
+import type { ComponentType } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import { homePathFor, useAuth } from './auth/authContext'
 import { RequireRole } from './auth/RequireRole'
 import { Header } from './components/Header'
 import { AdminUsersPage } from './pages/AdminUsersPage'
 import { LoginPage } from './pages/LoginPage'
+import { QuestionFormPage } from './pages/QuestionFormPage'
+import { QuestionsPage } from './pages/QuestionsPage'
+import { QuizFormPage } from './pages/QuizFormPage'
+import { QuizzesPage } from './pages/QuizzesPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { StudentHomePage } from './pages/StudentHomePage'
+
+const ADMIN_ROUTES: [string, ComponentType][] = [
+  ['/admin/users', AdminUsersPage],
+  ['/admin/questions', QuestionsPage],
+  ['/admin/questions/new', QuestionFormPage],
+  ['/admin/questions/:id', QuestionFormPage],
+  ['/admin/quizzes', QuizzesPage],
+  ['/admin/quizzes/new', QuizFormPage],
+  ['/admin/quizzes/:id', QuizFormPage],
+]
 
 function App() {
   const { user } = useAuth()
@@ -25,14 +40,17 @@ function App() {
             </RequireRole>
           }
         />
-        <Route
-          path="/admin/users"
-          element={
-            <RequireRole role="ADMIN">
-              <AdminUsersPage />
-            </RequireRole>
-          }
-        />
+        {ADMIN_ROUTES.map(([path, Page]) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <RequireRole role="ADMIN">
+                <Page />
+              </RequireRole>
+            }
+          />
+        ))}
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>
     </>
