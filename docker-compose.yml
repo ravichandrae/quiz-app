@@ -1,0 +1,48 @@
+name: schoolmela-quiz
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-quiz}
+      POSTGRES_USER: ${DB_USERNAME:-quiz}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-quiz}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-quiz}
+      DB_USERNAME: ${DB_USERNAME:-quiz}
+      DB_PASSWORD: ${DB_PASSWORD:-quiz}
+      # Development-only defaults; set real values in .env for any shared environment.
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me-0123456789abcdef}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-Admin}
+      BOOTSTRAP_ADMIN_MOBILE: ${BOOTSTRAP_ADMIN_MOBILE:-9999999999}
+      BOOTSTRAP_ADMIN_PIN: ${BOOTSTRAP_ADMIN_PIN:-123456}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    environment:
+      API_UPSTREAM: http://backend:8080
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db-data:

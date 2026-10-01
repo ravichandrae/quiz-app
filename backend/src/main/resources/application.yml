@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: quiz-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/quiz}
+    username: ${DB_USERNAME:quiz}
+    password: ${DB_PASSWORD:quiz}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+
+server:
+  forward-headers-strategy: framework
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:true}
+
+app:
+  auth:
+    # Required: at least 32 characters. Keep it secret; changing it logs everyone out.
+    jwt-secret: ${JWT_SECRET:}
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+    max-failed-logins: 5
+    lockout-duration: 15m
+  bootstrap-admin:
+    name: ${BOOTSTRAP_ADMIN_NAME:Admin}
+    mobile: ${BOOTSTRAP_ADMIN_MOBILE:}
+    pin: ${BOOTSTRAP_ADMIN_PIN:}

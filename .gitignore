@@ -1,0 +1,12 @@
+.env
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# backend
+backend/target/
+
+# web (also covered by web/.gitignore)
+web/node_modules/
+web/dist/
