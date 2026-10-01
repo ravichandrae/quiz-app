@@ -4,9 +4,12 @@ import { homePathFor, useAuth } from './auth/authContext'
 import { RequireRole } from './auth/RequireRole'
 import { Header } from './components/Header'
 import { AdminUsersPage } from './pages/AdminUsersPage'
+import { GroupDetailPage } from './pages/GroupDetailPage'
+import { GroupsPage } from './pages/GroupsPage'
 import { LoginPage } from './pages/LoginPage'
 import { QuestionFormPage } from './pages/QuestionFormPage'
 import { QuestionsPage } from './pages/QuestionsPage'
+import { QuizAssignPage } from './pages/QuizAssignPage'
 import { QuizFormPage } from './pages/QuizFormPage'
 import { QuizzesPage } from './pages/QuizzesPage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -20,6 +23,9 @@ const ADMIN_ROUTES: [string, ComponentType][] = [
   ['/admin/quizzes', QuizzesPage],
   ['/admin/quizzes/new', QuizFormPage],
   ['/admin/quizzes/:id', QuizFormPage],
+  ['/admin/quizzes/:id/assign', QuizAssignPage],
+  ['/admin/groups', GroupsPage],
+  ['/admin/groups/:id', GroupDetailPage],
 ]
 
 function App() {

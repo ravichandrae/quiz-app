@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.schoolmela.quiz.assignment.AssignmentRepository;
 import org.schoolmela.quiz.common.ApiException;
 import org.schoolmela.quiz.common.PageResponse;
 import org.schoolmela.quiz.question.Question;
@@ -28,11 +29,14 @@ public class QuizService {
 
     private final QuizRepository quizzes;
     private final QuestionRepository questions;
+    private final AssignmentRepository assignments;
     private final Clock clock;
 
-    public QuizService(QuizRepository quizzes, QuestionRepository questions, Clock clock) {
+    public QuizService(QuizRepository quizzes, QuestionRepository questions, AssignmentRepository assignments,
+            Clock clock) {
         this.quizzes = quizzes;
         this.questions = questions;
+        this.assignments = assignments;
         this.clock = clock;
     }
 
@@ -68,9 +72,11 @@ public class QuizService {
         return QuizDetail.from(quiz);
     }
 
+    /** Deletes the quiz and takes it away from everyone it was given to. */
     @Transactional
     public void delete(Long id) {
         find(id).delete(clock.instant());
+        assignments.deleteByQuizId(id);
     }
 
     private void apply(Quiz quiz, QuizRequest req) {

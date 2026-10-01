@@ -3,6 +3,7 @@ import { useAuth } from '../auth/authContext'
 
 const ADMIN_LINKS = [
   { to: '/admin/users', label: 'Students' },
+  { to: '/admin/groups', label: 'Groups' },
   { to: '/admin/questions', label: 'Questions' },
   { to: '/admin/quizzes', label: 'Quizzes' },
 ]

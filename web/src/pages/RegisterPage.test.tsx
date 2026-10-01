@@ -13,7 +13,10 @@ async function fillForm({ pin = '4321', confirmPin = '4321' } = {}) {
 
 describe('RegisterPage', () => {
   it('registers and opens the student home page', async () => {
-    const fetchMock = mockApi({ 'POST /api/auth/register': () => json(session('STUDENT'), 201) })
+    const fetchMock = mockApi({
+      'POST /api/auth/register': () => json(session('STUDENT'), 201),
+      'GET /api/me/quizzes': () => json([]),
+    })
     renderApp('/register')
 
     await fillForm()

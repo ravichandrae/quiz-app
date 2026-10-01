@@ -6,7 +6,10 @@ import { json, mockApi, problem, renderApp, session } from '../test-utils'
 
 describe('LoginPage', () => {
   it('logs a student in with digits-only mobile number and opens their home page', async () => {
-    const fetchMock = mockApi({ 'POST /api/auth/login': () => json(session('STUDENT')) })
+    const fetchMock = mockApi({
+      'POST /api/auth/login': () => json(session('STUDENT')),
+      'GET /api/me/quizzes': () => json([]),
+    })
     renderApp('/login')
 
     await userEvent.type(screen.getByLabelText('Mobile number'), '98765 43210')

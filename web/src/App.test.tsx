@@ -10,6 +10,7 @@ describe('routing', () => {
 
   it('keeps students out of admin pages', () => {
     signIn('STUDENT')
+    mockApi({ 'GET /api/me/quizzes': () => json([]) })
     renderApp('/admin/users')
     expect(screen.getByRole('heading', { name: 'Hello, Asha!' })).toBeInTheDocument()
   })

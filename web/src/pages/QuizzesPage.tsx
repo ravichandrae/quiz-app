@@ -96,6 +96,13 @@ export function QuizzesPage() {
                     <td>
                       <div className="actions">
                         <Link
+                          to={`/admin/quizzes/${quiz.id}/assign`}
+                          className="button button--small"
+                          aria-label={`Give ${quiz.title} to students`}
+                        >
+                          Assign
+                        </Link>
+                        <Link
                           to={`/admin/quizzes/${quiz.id}`}
                           className="button button--secondary button--small"
                           aria-label={`Edit ${quiz.title}`}
