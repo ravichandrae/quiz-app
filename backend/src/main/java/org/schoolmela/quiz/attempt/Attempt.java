@@ -5,9 +5,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import org.schoolmela.quiz.question.Question;
 import org.schoolmela.quiz.quiz.Quiz;
+import org.schoolmela.quiz.user.User;
 
 /**
  * A student's attempt at a quiz. The server owns the clock: each question's timer starts when it
@@ -57,6 +61,11 @@ public class Attempt {
 
     @Column(name = "student_id", nullable = false, updatable = false)
     private Long studentId;
+
+    /** Read-only view of {@code studentId}, for showing and filtering results by student. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    private User student;
 
     @Column(name = "quiz_title", nullable = false, length = 150)
     private String quizTitle;
@@ -226,6 +235,10 @@ public class Attempt {
 
     public Long getStudentId() {
         return studentId;
+    }
+
+    public User getStudent() {
+        return student;
     }
 
     public String getQuizTitle() {

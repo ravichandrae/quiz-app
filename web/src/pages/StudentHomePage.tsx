@@ -56,9 +56,18 @@ export function StudentHomePage() {
                 )}
               </p>
               {quiz.status === 'COMPLETED' ? (
-                <p className="quiz-card__score">
-                  Your score: {quiz.score} out of {quiz.questionCount}
-                </p>
+                <>
+                  <p className="quiz-card__score">
+                    Your score: {quiz.score} out of {quiz.questionCount}
+                  </p>
+                  <Link
+                    to={`/student/results/${quiz.attemptId}`}
+                    className="button button--secondary quiz-card__action"
+                    aria-label={`See results for ${quiz.title}`}
+                  >
+                    See results
+                  </Link>
+                </>
               ) : (
                 <Link
                   to={`/student/quizzes/${quiz.quizId}`}

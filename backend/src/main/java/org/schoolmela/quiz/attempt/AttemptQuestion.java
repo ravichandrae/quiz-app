@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.schoolmela.quiz.question.Question;
@@ -106,6 +107,34 @@ public class AttemptQuestion {
 
     boolean isOpen() {
         return answeredAt == null;
+    }
+
+    /** How the question went, for showing results. */
+    public enum Outcome {
+        CORRECT,
+        WRONG,
+        /** Shown, but its time ran out without an answer. */
+        NO_ANSWER,
+        /** Never shown, because the quiz time ran out first. */
+        NOT_REACHED
+    }
+
+    public Outcome getOutcome() {
+        if (correct) {
+            return Outcome.CORRECT;
+        }
+        if (answeredAt == null) {
+            return Outcome.NOT_REACHED;
+        }
+        return selectedOption == null ? Outcome.NO_ANSWER : Outcome.WRONG;
+    }
+
+    /** Seconds from showing the question to the answer (or the end of its time); null if never shown. */
+    public Long getSecondsTaken() {
+        if (servedAt == null || answeredAt == null) {
+            return null;
+        }
+        return Math.round(Duration.between(servedAt, answeredAt).toMillis() / 1000.0);
     }
 
     public List<String> getOptions() {

@@ -87,7 +87,7 @@ export function TakeQuizPage() {
   }, [quizId, start])
 
   if (running?.state.status === 'COMPLETED' && running.state.result) {
-    return <Finished title={running.state.quizTitle} result={running.state.result} />
+    return <Finished attemptId={running.state.attemptId} title={running.state.quizTitle} result={running.state.result} />
   }
   if (running) {
     // Keyed by question so each one starts with nothing selected.
@@ -267,7 +267,7 @@ function QuestionScreen({ running, onChange }: { running: Running; onChange: (r:
   )
 }
 
-function Finished({ title, result }: { title: string; result: AttemptResult }) {
+function Finished({ attemptId, title, result }: { attemptId: number; title: string; result: AttemptResult }) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   useEffect(() => headingRef.current?.focus(), [])
   return (
@@ -282,9 +282,14 @@ function Finished({ title, result }: { title: string; result: AttemptResult }) {
       </p>
       <p className="score__percent">{result.percentage}%</p>
       {result.finishReason === 'TIME_UP' && <p className="field__hint">The time for the quiz ran out.</p>}
-      <Link to="/student" className="button button--big">
-        Back to my quizzes
-      </Link>
+      <div className="button-stack">
+        <Link to={`/student/results/${attemptId}`} className="button button--big">
+          See your results
+        </Link>
+        <Link to="/student" className="button button--secondary button--big">
+          Back to my quizzes
+        </Link>
+      </div>
     </main>
   )
 }

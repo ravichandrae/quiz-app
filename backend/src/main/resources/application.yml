@@ -41,6 +41,9 @@ app:
   quiz:
     # Extra time after a question's deadline in which an answer still counts (slow networks).
     answer-grace: 3s
+  reports:
+    # Time zone for dates and times in exported CSV files.
+    time-zone: Asia/Kolkata
   bootstrap-admin:
     name: ${BOOTSTRAP_ADMIN_NAME:Admin}
     mobile: ${BOOTSTRAP_ADMIN_MOBILE:}

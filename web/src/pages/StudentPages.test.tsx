@@ -72,7 +72,7 @@ describe('student dashboard', () => {
 
     const history = screen.getByRole('heading', { name: 'History' }).closest('li')!
     expect(within(history).getByText('Your score: 8 out of 10')).toBeInTheDocument()
-    expect(within(history).queryByRole('link')).not.toBeInTheDocument()
+    expect(within(history).getByRole('link', { name: 'See results for History' })).toHaveAttribute('href', '/student/results/6')
   })
 
   it('says when there are no quizzes', async () => {

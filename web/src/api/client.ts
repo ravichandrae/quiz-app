@@ -102,8 +102,8 @@ function refreshSession(): Promise<Session | null> {
   return refreshing
 }
 
-/** Calls the API as the logged-in user, refreshing the access token once if it has expired. */
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+/** Sends a request as the logged-in user, refreshing the access token once if it has expired. */
+async function sendAuthorized(path: string, init: RequestInit): Promise<Response> {
   let res = await send(path, init, getSession()?.accessToken)
   if (res.status === 401 && getSession()) {
     const renewed = await refreshSession()
@@ -111,7 +111,29 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     res = await send(path, init, renewed.accessToken)
   }
   if (!res.ok) throw await toApiError(res)
+  return res
+}
+
+/** Calls the API as the logged-in user and returns the JSON response. */
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await sendAuthorized(path, init)
   return (res.status === 204 ? undefined : await res.json()) as T
+}
+
+/**
+ * Downloads a file as the logged-in user. A plain link cannot be used because the request needs
+ * the access token.
+ */
+export async function apiDownload(path: string, filename: string): Promise<void> {
+  const blob = await (await sendAuthorized(path, {})).blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 /** Calls an endpoint that does not need a logged-in user. */

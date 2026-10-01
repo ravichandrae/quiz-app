@@ -103,6 +103,13 @@ export function QuizzesPage() {
                           Assign
                         </Link>
                         <Link
+                          to={`/admin/results?quizId=${quiz.id}`}
+                          className="button button--secondary button--small"
+                          aria-label={`Results for ${quiz.title}`}
+                        >
+                          Results
+                        </Link>
+                        <Link
                           to={`/admin/quizzes/${quiz.id}`}
                           className="button button--secondary button--small"
                           aria-label={`Edit ${quiz.title}`}

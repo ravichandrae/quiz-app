@@ -10,6 +10,7 @@
   --error: #b91c1c;
   --error-bg: #fef2f2;
   --danger: #b91c1c;
+  --ok: #15803d;
   --ok-bg: #f0fdf4;
   --focus: #2563eb;
   --accent: #c2410c;
@@ -33,6 +34,7 @@
     --error: #fca5a5;
     --error-bg: #3f1d1d;
     --danger: #dc2626;
+    --ok: #4ade80;
     --ok-bg: #14301f;
     --focus: #60a5fa;
     --accent: #fb923c;
@@ -769,4 +771,123 @@ form.panel h2 {
   margin-top: 0;
   font-size: 1.5rem;
   font-weight: 700;
+}
+
+/* Results */
+.button-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.result-percent {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.result-questions {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-question {
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.result-question__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.result-question__head h3 {
+  flex: 1 1 16rem;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.outcome {
+  padding: 0.15rem 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: 1rem;
+}
+
+.outcome--right {
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.outcome--wrong {
+  color: var(--error);
+  background: var(--error-bg);
+}
+
+.outcome--muted {
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.result-options {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-option {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+}
+
+.result-option--correct {
+  background: var(--ok-bg);
+  border-color: var(--ok);
+}
+
+.result-option--chosen-wrong {
+  background: var(--error-bg);
+  border-color: var(--error);
+}
+
+.result-option__note {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.late-badge {
+  margin-left: 0.5rem;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin: 0 0 1rem;
+}
+
+.facts dt {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 600;
 }
