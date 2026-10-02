@@ -5,7 +5,7 @@ RUN mvn -B -q dependency:go-offline
 COPY src src
 RUN mvn -B -q package -DskipTests
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 # A fixed numeric user, so Kubernetes can check the container does not run as root.
 RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app
 WORKDIR /app
