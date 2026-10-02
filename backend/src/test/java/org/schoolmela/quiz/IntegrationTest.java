@@ -21,6 +21,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "app.bootstrap-admin.name=Head Teacher",
         "app.bootstrap-admin.mobile=" + IntegrationTest.ADMIN_MOBILE,
         "app.bootstrap-admin.pin=" + IntegrationTest.ADMIN_PIN,
+        // Every test request comes from 127.0.0.1; the rate limit has its own tests.
+        "app.rate-limit.auth-requests-per-minute=1000000",
 })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)

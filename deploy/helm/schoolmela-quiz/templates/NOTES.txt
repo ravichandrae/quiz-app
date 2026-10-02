@@ -1,0 +1,16 @@
+Schoolmela Quiz is installed as "{{ .Release.Name }}".
+
+{{- if .Values.ingress.enabled }}
+Open https://{{ .Values.ingress.host }} once DNS points at your ingress controller.
+{{- else }}
+The ingress is disabled. Try it with:
+  kubectl port-forward svc/{{ include "quiz.fullname" . }}-web 8080:80
+{{- end }}
+
+Check the backend is ready:
+  kubectl rollout status deploy/{{ include "quiz.fullname" . }}-backend
+
+{{- if not .Values.backup.enabled }}
+
+Backups are off in this chart: make sure your database provider backs it up daily.
+{{- end }}

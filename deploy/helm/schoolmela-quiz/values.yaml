@@ -1,0 +1,74 @@
+# Default values for schoolmela-quiz. See docs/deployment.md.
+
+image:
+  # Where the release workflow publishes the images (ghcr.io/<github owner>).
+  registry: ghcr.io/ravichandrae
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+backend:
+  image: schoolmela-quiz-backend
+  replicas: 2
+  javaOpts: "-XX:MaxRAMPercentage=75"
+  # The API docs (Swagger UI) are best kept off in production.
+  swaggerEnabled: false
+  # Login/register requests per client address per minute, counted per replica.
+  authRateLimitPerMinute: 120
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 768Mi
+
+web:
+  image: schoolmela-quiz-web
+  replicas: 2
+  # Proxies in front of the web pods (ingress controller, load balancer) whose X-Forwarded-For
+  # header gives the real client address. Narrow this to your cluster's pod/LB range.
+  trustedProxyCidr: 10.0.0.0/8
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
+# PostgreSQL is not part of this chart; a managed database (with its own backups) is recommended.
+database:
+  url: jdbc:postgresql://postgres.example.internal:5432/quiz
+  # Used by the backup job, which connects with these settings.
+  host: postgres.example.internal
+  port: 5432
+  name: quiz
+  username: quiz
+
+# Secret values. Prefer creating the Secret yourself and naming it in existingSecret, with the keys
+# DB_PASSWORD, JWT_SECRET, BOOTSTRAP_ADMIN_NAME, BOOTSTRAP_ADMIN_MOBILE and BOOTSTRAP_ADMIN_PIN.
+secrets:
+  existingSecret: ""
+  dbPassword: ""
+  # At least 32 random characters, e.g. `openssl rand -base64 48`.
+  jwtSecret: ""
+  bootstrapAdmin:
+    name: Admin
+    mobile: ""
+    pin: ""
+
+ingress:
+  enabled: true
+  className: nginx
+  host: quiz.example.org
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: schoolmela-quiz-tls
+
+# Daily pg_dump to a persistent volume. Leave disabled if the managed database is backed up already.
+backup:
+  enabled: false
+  schedule: "30 2 * * *"
+  keepDays: 7
+  storageSize: 5Gi
+  storageClass: ""

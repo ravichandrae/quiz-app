@@ -33,9 +33,37 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Lint and validate the chart
+        run: |
+          ARGS="--set secrets.jwtSecret=ci-only-secret-0123456789abcdef0123 --set secrets.dbPassword=ci --set backup.enabled=true"
+          helm lint deploy/helm/schoolmela-quiz $ARGS
+          helm template quiz deploy/helm/schoolmela-quiz $ARGS \
+            | docker run --rm -i ghcr.io/yannh/kubeconform:latest -strict -summary -
 
   docker:
     runs-on: ubuntu-latest

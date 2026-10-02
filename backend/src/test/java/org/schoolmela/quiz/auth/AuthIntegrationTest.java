@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.schoolmela.quiz.IntegrationTest;
 import org.schoolmela.quiz.user.User;
@@ -16,6 +17,9 @@ class AuthIntegrationTest extends IntegrationTest {
 
     @Autowired
     UserRepository users;
+
+    @Autowired
+    TokenService tokenService;
 
     @Test
     void registerLogsTheStudentInAndStoresAHashedPin() throws Exception {
@@ -142,6 +146,17 @@ class AuthIntegrationTest extends IntegrationTest {
 
         mvc.perform(get("/me").header("Authorization", bearer(tampered)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void nightlyCleanupRemovesExpiredRefreshTokens() throws Exception {
+        String body = register("Asha", uniqueMobile(), "4321").andReturn().getResponse().getContentAsString();
+        String refresh = JsonPath.read(body, "$.refreshToken");
+
+        clock.advance(Duration.ofDays(8));
+
+        assertThat(tokenService.deleteUnusableTokens()).isPositive();
+        postJson("/auth/refresh", refreshBody(refresh)).andExpect(status().isUnauthorized());
     }
 
     private static String refreshBody(String refreshToken) {

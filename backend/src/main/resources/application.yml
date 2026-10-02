@@ -13,7 +13,9 @@ spring:
     locations: classpath:db/migration
 
 server:
-  forward-headers-strategy: framework
+  # Tomcat takes the client address from X-Forwarded-For, but only when the request comes from a
+  # proxy on a private network. nginx in front sets that header to the one real client address.
+  forward-headers-strategy: native
   shutdown: graceful
 
 management:
@@ -38,6 +40,10 @@ app:
     refresh-token-ttl: 7d
     max-failed-logins: 5
     lockout-duration: 15m
+  rate-limit:
+    # Login/register/refresh requests per client network address per minute. A class often shares
+    # one school address, so keep this generous; wrong PINs are also limited per account.
+    auth-requests-per-minute: ${AUTH_RATE_LIMIT_PER_MINUTE:120}
   quiz:
     # Extra time after a question's deadline in which an answer still counts (slow networks).
     answer-grace: 3s

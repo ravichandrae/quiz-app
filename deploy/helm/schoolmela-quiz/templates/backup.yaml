@@ -1,0 +1,75 @@
+{{- if .Values.backup.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "quiz.fullname" . }}-backups
+  labels:
+    {{- include "quiz.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- with .Values.backup.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.backup.storageSize }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "quiz.fullname" . }}-backup
+  labels:
+    {{- include "quiz.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          automountServiceAccountToken: false
+          securityContext:
+            {{- include "quiz.podSecurity" . | nindent 12 }}
+            runAsUser: 70
+            fsGroup: 70
+          containers:
+            - name: backup
+              image: postgres:17-alpine
+              command: ["sh", "-c"]
+              # Same steps as deploy/backup/backup.sh with BACKUP_ONCE=true.
+              args:
+                - |
+                  set -eu
+                  file="/backups/quiz-$(date -u +%Y%m%dT%H%M%SZ).dump"
+                  pg_dump --format=custom --file="$file.partial"
+                  mv "$file.partial" "$file"
+                  echo "backup written: $file"
+                  find /backups -name 'quiz-*.dump' -mtime +{{ .Values.backup.keepDays }} -delete
+              env:
+                - name: PGHOST
+                  value: {{ .Values.database.host | quote }}
+                - name: PGPORT
+                  value: {{ .Values.database.port | quote }}
+                - name: PGDATABASE
+                  value: {{ .Values.database.name | quote }}
+                - name: PGUSER
+                  value: {{ .Values.database.username | quote }}
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "quiz.secretName" . }}
+                      key: DB_PASSWORD
+              securityContext:
+                {{- include "quiz.containerSecurity" . | nindent 16 }}
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: {{ include "quiz.fullname" . }}-backups
+{{- end }}
