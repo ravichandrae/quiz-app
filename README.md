@@ -9,7 +9,7 @@ Requirements: [Schoolmela Quiz App Requirements.md](Schoolmela%20Quiz%20App%20Re
 |------------|-------------------------------------------------------------|
 | `backend/` | Spring Boot 4 API (Java 21), PostgreSQL, Flyway migrations   |
 | `web/`     | React + TypeScript web app (Vite), served by nginx in Docker |
-| `mobile/`  | Flutter Android app (Phase 7)                                |
+| `mobile/`  | Flutter Android app for students — see [mobile/README.md](mobile/README.md) |
 
 ## Run everything with Docker
 
