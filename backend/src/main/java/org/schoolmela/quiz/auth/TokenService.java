@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
@@ -16,6 +17,7 @@ import org.schoolmela.quiz.config.AuthProperties;
 import org.schoolmela.quiz.config.SecurityConfig;
 import org.schoolmela.quiz.user.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -82,6 +84,17 @@ public class TokenService {
     @Transactional
     public void revokeAll(User user) {
         refreshTokens.revokeAllForUser(user.getId(), clock.instant());
+    }
+
+    /**
+     * Deletes refresh tokens that can no longer be used, every night. Revoked tokens are kept for a
+     * day, which helps when looking into a problem. Safe to run on several replicas at once.
+     */
+    @Scheduled(cron = "${app.auth.token-cleanup-cron:0 30 3 * * *}")
+    @Transactional
+    public int deleteUnusableTokens() {
+        Instant now = clock.instant();
+        return refreshTokens.deleteUnusable(now, now.minus(Duration.ofDays(1)));
     }
 
     private static String hash(String token) {

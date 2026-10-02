@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "quiz.fullname" . }}-backend
+  labels:
+    {{- include "quiz.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "quiz.selector" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        {{- include "quiz.selector" . | nindent 8 }}
+        app.kubernetes.io/component: backend
+      annotations:
+        # Restart pods when the chart-managed Secret changes.
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        {{- include "quiz.podSecurity" . | nindent 8 }}
+      containers:
+        - name: backend
+          image: {{ include "quiz.image" (list . .Values.backend.image) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DB_URL
+              value: {{ .Values.database.url | quote }}
+            - name: DB_USERNAME
+              value: {{ .Values.database.username | quote }}
+            - name: SWAGGER_ENABLED
+              value: {{ .Values.backend.swaggerEnabled | quote }}
+            - name: AUTH_RATE_LIMIT_PER_MINUTE
+              value: {{ .Values.backend.authRateLimitPerMinute | quote }}
+            - name: JAVA_OPTS
+              value: {{ .Values.backend.javaOpts | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "quiz.secretName" . }}
+          startupProbe:
+            httpGet: {path: /actuator/health/liveness, port: http}
+            periodSeconds: 5
+            failureThreshold: 36
+          livenessProbe:
+            httpGet: {path: /actuator/health/liveness, port: http}
+            periodSeconds: 15
+          readinessProbe:
+            httpGet: {path: /actuator/health/readiness, port: http}
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          securityContext:
+            {{- include "quiz.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Named "backend" inside the release so the web pods' API_UPSTREAM can find it.
+  name: {{ include "quiz.fullname" . }}-backend
+  labels:
+    {{- include "quiz.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  selector:
+    {{- include "quiz.selector" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+{{- if gt (int .Values.backend.replicas) 1 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "quiz.fullname" . }}-backend
+  labels:
+    {{- include "quiz.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "quiz.selector" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+{{- end }}

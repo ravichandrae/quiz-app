@@ -6,10 +6,11 @@ COPY src src
 RUN mvn -B -q package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
-RUN addgroup -S app && adduser -S app -G app
+# A fixed numeric user, so Kubernetes can check the container does not run as root.
+RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app
 WORKDIR /app
 COPY --from=build /app/target/quiz-backend-*.jar app.jar
-USER app
+USER 10001
 EXPOSE 8080
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
 HEALTHCHECK --interval=15s --timeout=3s --start-period=60s --retries=5 \

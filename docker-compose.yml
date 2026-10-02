@@ -28,6 +28,7 @@ services:
       BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-Admin}
       BOOTSTRAP_ADMIN_MOBILE: ${BOOTSTRAP_ADMIN_MOBILE:-9999999999}
       BOOTSTRAP_ADMIN_PIN: ${BOOTSTRAP_ADMIN_PIN:-123456}
+      AUTH_RATE_LIMIT_PER_MINUTE: ${AUTH_RATE_LIMIT_PER_MINUTE:-120}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
@@ -38,11 +39,32 @@ services:
     build: ./web
     environment:
       API_UPSTREAM: http://backend:8080
+      # Set when a proxy in front of nginx supplies the client address (see docs/deployment.md).
+      TRUSTED_PROXY_CIDR: ${TRUSTED_PROXY_CIDR:-127.0.0.1/32}
     ports:
-      - "${WEB_PORT:-3000}:80"
+      - "${WEB_PORT:-3000}:8080"
     depends_on:
       backend:
         condition: service_healthy
 
+  # Dumps the database at start-up and then every 24 hours, keeping 7 days of dumps in the
+  # "backups" volume. See docs/deployment.md for restoring.
+  backup:
+    image: postgres:17-alpine
+    entrypoint: ["sh", "/backup.sh"]
+    environment:
+      PGHOST: db
+      PGDATABASE: ${DB_NAME:-quiz}
+      PGUSER: ${DB_USERNAME:-quiz}
+      PGPASSWORD: ${DB_PASSWORD:-quiz}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-7}
+    volumes:
+      - ./deploy/backup/backup.sh:/backup.sh:ro
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db-data:
+  backups:

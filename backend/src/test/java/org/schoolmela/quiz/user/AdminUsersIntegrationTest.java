@@ -83,6 +83,19 @@ class AdminUsersIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void turningAnAccountOffStopsItsCurrentLoginAtOnce() throws Exception {
+        String registered = register("Asha", uniqueMobile(), "4321").andReturn().getResponse().getContentAsString();
+        long id = ((Number) JsonPath.read(registered, "$.user.id")).longValue();
+        String accessToken = JsonPath.read(registered, "$.accessToken");
+        mvc.perform(get("/me").header("Authorization", bearer(accessToken))).andExpect(status().isOk());
+
+        setActive(accessTokenFor(ADMIN_MOBILE, ADMIN_PIN), id, false).andExpect(status().isOk());
+
+        // The access token has not expired, but the account is off.
+        mvc.perform(get("/me").header("Authorization", bearer(accessToken))).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void reactivatingClearsALockout() throws Exception {
         String mobile = uniqueMobile();
         String registered = register("Asha", mobile, "4321").andReturn().getResponse().getContentAsString();

@@ -10,6 +10,14 @@ Requirements: [Schoolmela Quiz App Requirements.md](Schoolmela%20Quiz%20App%20Re
 | `backend/` | Spring Boot 4 API (Java 21), PostgreSQL, Flyway migrations   |
 | `web/`     | React + TypeScript web app (Vite), served by nginx in Docker |
 | `mobile/`  | Flutter Android app for students — see [mobile/README.md](mobile/README.md) |
+| `deploy/`  | Helm chart, backup script and load test                       |
+
+## Documents
+
+- [Student guide](docs/student-guide.md) and [Teacher (admin) guide](docs/admin-guide.md)
+- [Deploying](docs/deployment.md): Docker Compose or Kubernetes (Helm), settings, backups, load test results
+- [Security](docs/security.md): what protects the system, and known limits
+- [Usability test plan](docs/usability-test-plan.md) for the acceptance test with students and teachers
 
 ## Run everything with Docker
 
